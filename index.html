@@ -517,9 +517,12 @@ a { text-decoration: none; color: inherit; }
   .main {
     flex: 1;
     padding: 14px 12px;
+    padding-top: max(14px, env(safe-area-inset-top, 14px));
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px));
     min-width: 0;
   }
+  .sidebar { padding-top: env(safe-area-inset-top, 8px); }
+  .home-greeting { padding-top: 4px; }
   .module-title { font-size: 18px; }
   .module-title-icon { width: 26px; height: 26px; font-size: 14px; border-radius: 8px; }
   .module-desc { padding-left: 36px; font-size: 12px; }
