@@ -75,7 +75,19 @@ const App = (() => {
     }
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('js/sw.js').catch(() => {});
+      navigator.serviceWorker.register('js/sw.js').then(function(reg) {
+        // Check for updates every time app opens
+        reg.addEventListener('updatefound', function() {
+          var newWorker = reg.installing;
+          newWorker.addEventListener('statechange', function() {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version available — reload immediately
+              toast('🔄 发现新版本，正在更新...');
+              setTimeout(function() { window.location.reload(); }, 800);
+            }
+          });
+        });
+      }).catch(function() {});
     }
 
     const saved = localStorage.getItem('wb_current_module');
