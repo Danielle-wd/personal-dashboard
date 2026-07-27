@@ -1,24 +1,9 @@
 /**
- * Service Worker - Cache-first strategy for PWA
+ * Service Worker - Network-first strategy (always fresh content)
  */
-const CACHE_NAME = 'wb-v11';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/js/app.js',
-  '/js/storage.js',
-  '/js/todo.js',
-  '/js/notes.js',
-  '/js/english.js',
-  '/js/fitness.js',
-  '/js/jobs.js',
-  '/js/media.js',
-  '/js/capture.js',
-  '/js/home.js',
-];
+const CACHE_NAME = 'wb-v12';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
   self.skipWaiting();
 });
 
@@ -30,15 +15,16 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+  // Network-first: always try network, fall back to cache
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      return cached || fetch(e.request).then(response => {
+    fetch(e.request)
+      .then(response => {
         if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(e.request))
   );
 });
