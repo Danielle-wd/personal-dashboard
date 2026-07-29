@@ -43,12 +43,15 @@ const TodoModule = (() => {
         <div class="kanban-col-title">${STATUS_MAP[status]}<span class="count">${filtered.length}</span></div>`;
       filtered.forEach(item => {
         const isOverdue = item.status !== 'done' && item.dueDate && item.dueDate < new Date().toISOString().split('T')[0];
-        const isDone = item.status === 'done';
-        html += `<div class="kanban-item${isDone?' done':''}" data-id="${item.id}">
+        const stat = item.status;
+        const checkIcon = stat === 'done' ? '✓' : stat === 'doing' ? '◐' : '○';
+        const doneClass = stat === 'done' ? ' done' : '';
+        const checkClass = stat === 'done' ? ' check-done' : stat === 'doing' ? ' check-doing' : '';
+        html += `<div class="kanban-item${doneClass}" data-id="${item.id}">
           <div class="kanban-item-delete" onclick="TodoModule.swipeDelete('${item.id}')">删除</div>
-          <div class="kanban-item-inner" onclick="TodoModule.openForm('${item.id}')">
+          <div class="kanban-item-inner" data-status="${stat}" onclick="TodoModule.openForm('${item.id}')">
             <div class="kanban-item-row">
-              <button class="kanban-check" onclick="event.stopPropagation();TodoModule.toggleStatus('${item.id}')">${isDone ? '✓' : '○'}</button>
+              <button class="kanban-check${checkClass}" onclick="event.stopPropagation();TodoModule.toggleStatus('${item.id}')">${checkIcon}</button>
               <div>
                 <div class="kanban-item-title">${esc(item.title)}</div>
                 <div class="kanban-item-meta">
@@ -120,11 +123,12 @@ const TodoModule = (() => {
     const items = getData();
     const found = items.find(i => i.id === id);
     if (!found) return;
-    // Toggle between done and todo
-    found.status = found.status === 'done' ? 'todo' : 'done';
+    const cycle = { todo: 'doing', doing: 'done', done: 'todo' };
+    found.status = cycle[found.status];
     saveData(items);
     refresh();
-    toast(found.status === 'done' ? '✅ 已完成' : '🔄 已恢复');
+    var msgs = { doing: '▶️ 进行中', done: '✅ 已完成', todo: '🔄 待办' };
+    toast(msgs[found.status]);
   }
 
   function swipeDelete(id) {
