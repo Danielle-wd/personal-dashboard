@@ -311,12 +311,16 @@ a { text-decoration: none; color: inherit; }
   border-radius: 10px;
 }
 .kanban-item {
-  background: #fff; border-radius: var(--radius-sm); padding: 14px;
-  margin-bottom: 10px; border: 1px solid var(--border-light);
-  cursor: pointer; transition: all var(--transition);
+  background: transparent;
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
   position: relative;
+  overflow: hidden;
 }
-.kanban-item:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); border-color: var(--theme, #2563eb); }
+.kanban-item-inner:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); border-color: var(--theme, #2563eb); }
 .kanban-item-title { font-size: 14px; font-weight: 550; margin-bottom: 6px; color: var(--text); }
 .kanban-item-meta { font-size: 11px; color: var(--text-tertiary); display: flex; gap: 10px; align-items: center; }
 .kanban-item-date.overdue { color: #dc2626; font-weight: 650; }
@@ -355,9 +359,38 @@ a { text-decoration: none; color: inherit; }
   color: var(--text-tertiary);
   opacity: 0.7;
 }
-.kanban-item.done {
+.kanban-item.done .kanban-item-inner {
   opacity: 0.75;
   background: #f9fafb;
+}
+.kanban-item {
+  position: relative;
+  overflow: hidden;
+}
+.kanban-item-inner {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  border: 1px solid var(--border-light);
+  transition: transform 0.2s ease;
+}
+.kanban-item-delete {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 75px;
+  background: #ef4444;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  z-index: 0;
+  letter-spacing: 0.5px;
 }
 .kanban-edit-icon {
   margin-left: auto;
