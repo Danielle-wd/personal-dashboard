@@ -349,10 +349,20 @@ a { text-decoration: none; color: inherit; }
   color: var(--success);
   background: #ecfdf5;
 }
-.kanban-item.done .kanban-check {
+.kanban-item.done .kanban-check,
+.kanban-check.check-done {
   border-color: var(--success);
   background: var(--success);
   color: #fff;
+}
+.kanban-check.check-doing {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #f59e0b;
+}
+.kanban-check.check-doing:hover {
+  border-color: #d97706;
+  background: #fef3c7;
 }
 .kanban-item.done .kanban-item-title {
   text-decoration: line-through;
@@ -362,6 +372,9 @@ a { text-decoration: none; color: inherit; }
 .kanban-item.done .kanban-item-inner {
   opacity: 0.75;
   background: #f9fafb;
+}
+.kanban-item-inner[data-status="doing"] {
+  border-left: 3px solid #f59e0b;
 }
 .kanban-item {
   position: relative;
