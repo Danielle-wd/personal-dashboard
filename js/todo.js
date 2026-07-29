@@ -44,17 +44,20 @@ const TodoModule = (() => {
       filtered.forEach(item => {
         const isOverdue = item.status !== 'done' && item.dueDate && item.dueDate < new Date().toISOString().split('T')[0];
         const isDone = item.status === 'done';
-        html += `<div class="kanban-item${isDone?' done':''}">
-          <div class="kanban-item-row">
-            <button class="kanban-check" onclick="event.stopPropagation();TodoModule.toggleStatus('${item.id}')">${isDone ? '✓' : '○'}</button>
-            <div>
-              <div class="kanban-item-title">${esc(item.title)}</div>
-              <div class="kanban-item-meta">
-                ${item.dueDate ? `<span class="kanban-item-date ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ ' : '📅 '}${item.dueDate}</span>` : ''}
-                ${item.remind ? '<span>🔔 已设提醒</span>' : ''}
+        html += `<div class="kanban-item${isDone?' done':''}" data-id="${item.id}">
+          <div class="kanban-item-delete" onclick="TodoModule.swipeDelete('${item.id}')">删除</div>
+          <div class="kanban-item-inner" onclick="TodoModule.openForm('${item.id}')">
+            <div class="kanban-item-row">
+              <button class="kanban-check" onclick="event.stopPropagation();TodoModule.toggleStatus('${item.id}')">${isDone ? '✓' : '○'}</button>
+              <div>
+                <div class="kanban-item-title">${esc(item.title)}</div>
+                <div class="kanban-item-meta">
+                  ${item.dueDate ? `<span class="kanban-item-date ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ ' : '📅 '}${item.dueDate}</span>` : ''}
+                  ${item.remind ? '<span>🔔 已设提醒</span>' : ''}
+                </div>
               </div>
+              <span class="kanban-edit-icon" onclick="event.stopPropagation();TodoModule.openForm('${item.id}')">✎</span>
             </div>
-            <span class="kanban-edit-icon" onclick="event.stopPropagation();TodoModule.openForm('${item.id}')">✎</span>
           </div>
         </div>`;
       });
@@ -124,6 +127,56 @@ const TodoModule = (() => {
     toast(found.status === 'done' ? '✅ 已完成' : '🔄 已恢复');
   }
 
+  function swipeDelete(id) {
+    if (!confirm('确定删除这个任务？')) return;
+    const items = getData().filter(i => i.id !== id);
+    saveData(items);
+    refresh();
+    toast('🗑️ 已删除');
+  }
+
+  function initSwipe() {
+    document.querySelectorAll('.kanban-item-inner').forEach(function(el) {
+      var startX = 0, startY = 0, currentX = 0;
+      var parent = el.closest('.kanban-item');
+
+      el.addEventListener('touchstart', function(e) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        currentX = 0;
+        el.style.transition = 'none';
+      }, { passive: true });
+
+      el.addEventListener('touchmove', function(e) {
+        var dx = e.touches[0].clientX - startX;
+        var dy = e.touches[0].clientY - startY;
+        if (Math.abs(dy) > Math.abs(dx)) return;
+        if (dx > 0) return;
+        currentX = Math.max(dx, -75);
+        el.style.transform = 'translateX(' + currentX + 'px)';
+      }, { passive: true });
+
+      el.addEventListener('touchend', function() {
+        el.style.transition = 'transform 0.2s ease';
+        if (currentX < -25) {
+          el.style.transform = 'translateX(-75px)';
+          document.querySelectorAll('.kanban-item-inner').forEach(function(other) {
+            if (other !== el) { other.style.transition = 'transform 0.2s ease'; other.style.transform = 'translateX(0)'; }
+          });
+        } else {
+          el.style.transform = 'translateX(0)';
+        }
+      });
+
+      document.addEventListener('click', function(e) {
+        if (!parent.contains(e.target)) {
+          el.style.transition = 'transform 0.2s ease';
+          el.style.transform = 'translateX(0)';
+        }
+      });
+    });
+  }
+
   function deleteItem(id) {
     if (!confirm('确定删除这个任务？')) return;
     const items = getData().filter(i => i.id !== id);
@@ -133,7 +186,11 @@ const TodoModule = (() => {
     toast('任务已删除');
   }
 
-  function refresh() { App.loadModule('todo'); }
+  function refresh() { App.loadModule('todo'); setTimeout(initSwipe, 100); }
+
+  // Call swipe init on first render too
+  var origRender = render;
+  render = function() { var h = origRender(); setTimeout(initSwipe, 100); return h; };
 
   function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -141,5 +198,5 @@ const TodoModule = (() => {
   setInterval(checkReminders, 60000);
   checkReminders();
 
-  return { render, openForm, closeForm, saveItem, deleteItem, toggleStatus, refresh, checkReminders };
+  return { render, openForm, closeForm, saveItem, deleteItem, toggleStatus, swipeDelete, initSwipe, refresh, checkReminders };
 })();
