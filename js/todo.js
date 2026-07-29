@@ -43,11 +43,18 @@ const TodoModule = (() => {
         <div class="kanban-col-title">${STATUS_MAP[status]}<span class="count">${filtered.length}</span></div>`;
       filtered.forEach(item => {
         const isOverdue = item.status !== 'done' && item.dueDate && item.dueDate < new Date().toISOString().split('T')[0];
-        html += `<div class="kanban-item" onclick="TodoModule.openForm('${item.id}')">
-          <div class="kanban-item-title">${esc(item.title)}</div>
-          <div class="kanban-item-meta">
-            ${item.dueDate ? `<span class="kanban-item-date ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ ' : '📅 '}${item.dueDate}</span>` : ''}
-            ${item.remind ? '<span>🔔 已设提醒</span>' : ''}
+        const isDone = item.status === 'done';
+        html += `<div class="kanban-item${isDone?' done':''}">
+          <div class="kanban-item-row">
+            <button class="kanban-check" onclick="event.stopPropagation();TodoModule.toggleStatus('${item.id}')">${isDone ? '✓' : '○'}</button>
+            <div>
+              <div class="kanban-item-title">${esc(item.title)}</div>
+              <div class="kanban-item-meta">
+                ${item.dueDate ? `<span class="kanban-item-date ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ ' : '📅 '}${item.dueDate}</span>` : ''}
+                ${item.remind ? '<span>🔔 已设提醒</span>' : ''}
+              </div>
+            </div>
+            <span class="kanban-edit-icon" onclick="event.stopPropagation();TodoModule.openForm('${item.id}')">✎</span>
           </div>
         </div>`;
       });
@@ -106,6 +113,17 @@ const TodoModule = (() => {
     toast(existingId ? '任务已更新' : '任务已创建');
   }
 
+  function toggleStatus(id) {
+    const items = getData();
+    const found = items.find(i => i.id === id);
+    if (!found) return;
+    // Toggle between done and todo
+    found.status = found.status === 'done' ? 'todo' : 'done';
+    saveData(items);
+    refresh();
+    toast(found.status === 'done' ? '✅ 已完成' : '🔄 已恢复');
+  }
+
   function deleteItem(id) {
     if (!confirm('确定删除这个任务？')) return;
     const items = getData().filter(i => i.id !== id);
@@ -123,5 +141,5 @@ const TodoModule = (() => {
   setInterval(checkReminders, 60000);
   checkReminders();
 
-  return { render, openForm, closeForm, saveItem, deleteItem, refresh, checkReminders };
+  return { render, openForm, closeForm, saveItem, deleteItem, toggleStatus, refresh, checkReminders };
 })();
